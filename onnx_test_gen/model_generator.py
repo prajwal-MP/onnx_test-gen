@@ -96,6 +96,17 @@ def generate_matmul_models(output_dir):
     matmul_vector_model = helper.make_model(matmul_vector_graph, producer_name='onnx-examples')
     save_model(matmul_vector_model, output_dir, "matmul_2d_by_1d.onnx")
 
+def generate_relu_model(output_dir):
+    data = np.random.randn(3, 4, 5).astype(np.float32)
+    relu_graph = helper.make_graph(
+        nodes=[helper.make_node('Relu', inputs=['data'], outputs=['result'])],
+        name='ReluGraph',
+        inputs=[helper.make_tensor_value_info('data', TensorProto.FLOAT, [3, 4, 5])],
+        outputs=[helper.make_tensor_value_info('result', TensorProto.FLOAT, [3, 4, 5])],
+    )
+    relu_model = helper.make_model(relu_graph, producer_name='onnx-examples')
+    save_model(relu_model, output_dir, "relu.onnx")
+
 def generate_concat_model(output_dir):
     data_1 = np.random.rand(2, 2).astype(np.float32)
     data_2 = np.random.rand(2, 2).astype(np.float32)
@@ -111,12 +122,19 @@ def generate_concat_model(output_dir):
     concat_model = helper.make_model(concat_graph, producer_name='onnx-examples')
     save_model(concat_model, output_dir, "concat.onnx")
 
+def ensure_dir_exists(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 def generate_test_models(operation, output_dir):
+    ensure_dir_exists(output_directory)
     if operation.lower() == 'add':
         generate_add_models(output_dir)
     elif operation.lower() == 'matmul':
         generate_matmul_models(output_dir)
     elif operation.lower() == 'concat':
         generate_concat_model(output_dir)
+    elif operation.lower() == 'relu':
+        generate_relu_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
