@@ -96,11 +96,27 @@ def generate_matmul_models(output_dir):
     matmul_vector_model = helper.make_model(matmul_vector_graph, producer_name='onnx-examples')
     save_model(matmul_vector_model, output_dir, "matmul_2d_by_1d.onnx")
 
+def generate_concat_model(output_dir):
+    data_1 = np.random.rand(2, 2).astype(np.float32)
+    data_2 = np.random.rand(2, 2).astype(np.float32)
+    concat_graph = helper.make_graph(
+        nodes=[helper.make_node('Concat', inputs=['data_1', 'data_2'], outputs=['concat_result'], axis=0)],
+        name='ConcatGraph',
+        inputs=[
+            helper.make_tensor_value_info('data_1', TensorProto.FLOAT, [2, 2]),
+            helper.make_tensor_value_info('data_2', TensorProto.FLOAT, [2, 2]),
+        ],
+        outputs=[helper.make_tensor_value_info('concat_result', TensorProto.FLOAT, [4, 2])],
+    )
+    concat_model = helper.make_model(concat_graph, producer_name='onnx-examples')
+    save_model(concat_model, output_dir, "concat.onnx")
 
 def generate_test_models(operation, output_dir):
     if operation.lower() == 'add':
         generate_add_models(output_dir)
     elif operation.lower() == 'matmul':
         generate_matmul_models(output_dir)
+    elif operation.lower() == 'concat':
+        generate_concat_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
