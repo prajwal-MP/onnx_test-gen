@@ -122,6 +122,28 @@ def generate_concat_model(output_dir):
     concat_model = helper.make_model(concat_graph, producer_name='onnx-examples')
     save_model(concat_model, output_dir, "concat.onnx")
 
+def generate_transpose_model(output_dir):
+    data = np.random.randn(2, 3, 4).astype(np.float32)
+    transpose_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Transpose',
+                inputs=['data'],
+                outputs=['transposed'],
+                perm=(1, 0, 2)  # Example: swap the first two dimensions
+            ),
+        ],
+        name='TransposeGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [2, 3, 4]),
+        ],
+        outputs=[
+            helper.make_tensor_value_info('transposed', TensorProto.FLOAT, [3, 2, 4]),
+        ],
+    )
+    transpose_model = helper.make_model(transpose_graph, producer_name='onnx-examples')
+    save_model(transpose_model, output_dir, "transpose.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -136,5 +158,7 @@ def generate_test_models(operation, output_dir):
         generate_concat_model(output_dir)
     elif operation.lower() == 'relu':
         generate_relu_model(output_dir)
+    elif operation.lower() == 'transpose':
+        generate_transpose_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
