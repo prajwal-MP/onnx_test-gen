@@ -144,6 +144,28 @@ def generate_transpose_model(output_dir):
     transpose_model = helper.make_model(transpose_graph, producer_name='onnx-examples')
     save_model(transpose_model, output_dir, "transpose.onnx")
 
+def generate_squeeze_model(output_dir):
+    data = np.random.randn(1, 3, 4, 1).astype(np.float32)
+    squeeze_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Squeeze',
+                inputs=['data'],
+                outputs=['squeezed'],
+                axes=[0, 3]  # Remove the first and last dimension if they are single-dimensional
+            ),
+        ],
+        name='SqueezeGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [1, 3, 4, 1]),
+        ],
+        outputs=[
+            helper.make_tensor_value_info('squeezed', TensorProto.FLOAT, [3, 4]),  # Expected shape after squeeze
+        ],
+    )
+    squeeze_model = helper.make_model(squeeze_graph, producer_name='onnx-examples')
+    save_model(squeeze_model, output_dir, "squeeze.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -160,5 +182,7 @@ def generate_test_models(operation, output_dir):
         generate_relu_model(output_dir)
     elif operation.lower() == 'transpose':
         generate_transpose_model(output_dir)
+    elif operation.lower() == 'squeeze':
+        generate_squeeze_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
