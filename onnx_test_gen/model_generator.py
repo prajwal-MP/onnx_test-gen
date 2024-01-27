@@ -166,6 +166,33 @@ def generate_squeeze_model(output_dir):
     squeeze_model = helper.make_model(squeeze_graph, producer_name='onnx-examples')
     save_model(squeeze_model, output_dir, "squeeze.onnx")
 
+def generate_reshape_model(output_dir):
+    data = np.random.randn(2, 3, 4).astype(np.float32)
+    target_shape = np.array([4, 3, 2], dtype=np.int64)  # Example target shape, make sure the total elements match
+
+    reshape_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Reshape',
+                inputs=['data', 'shape'],
+                outputs=['reshaped'],
+            ),
+        ],
+        name='ReshapeGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [2, 3, 4]),
+            helper.make_tensor_value_info('shape', TensorProto.INT64, [3]),  # Shape is a 1D tensor with 3 elements in this case
+        ],
+        outputs=[
+            helper.make_tensor_value_info('reshaped', TensorProto.FLOAT, [4, 3, 2]),  # Expected shape after Reshape
+        ],
+    )
+    initializers = [
+        numpy_helper.from_array(target_shape, name='shape'),
+    ]
+    reshape_model = helper.make_model(reshape_graph, producer_name='onnx-examples', initializers=initializers)
+    save_model(reshape_model, output_dir, "reshape.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -184,5 +211,7 @@ def generate_test_models(operation, output_dir):
         generate_transpose_model(output_dir)
     elif operation.lower() == 'squeeze':
         generate_squeeze_model(output_dir)
+    elif operation.lower() == 'reshape':
+        generate_reshape_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
