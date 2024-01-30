@@ -193,6 +193,63 @@ def generate_reshape_model(output_dir):
     reshape_model = helper.make_model(reshape_graph, producer_name='onnx-examples', initializers=initializers)
     save_model(reshape_model, output_dir, "reshape.onnx")
 
+def generate_softmax_model(output_dir):
+    data = np.random.randn(1, 5).astype(np.float32)  # Example: a batch with a single sample with 5 features
+
+    softmax_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Softmax',
+                inputs=['data'],
+                outputs=['probabilities'],
+                axis=1,  # Typically, softmax is applied along the feature axis
+            ),
+        ],
+        name='SoftmaxGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [1, 5]),
+        ],
+        outputs=[
+            helper.make_tensor_value_info('probabilities', TensorProto.FLOAT, [1, 5]),  # Softmax normalized probabilities
+        ],
+    )
+    softmax_model = helper.make_model(softmax_graph, producer_name='onnx-examples')
+    save_model(softmax_model, output_dir, "softmax.onnx")
+
+def generate_slice_model(output_dir):
+    data = np.random.randn(3, 4, 5).astype(np.float32)  # Example 3D tensor
+    starts = np.array([0, 1, 0], dtype=np.int64)  # Start indices for slicing along each axis
+    ends = np.array([3, 3, 5], dtype=np.int64)  # End indices for slicing (exclusive)
+    axes = np.array([0, 1, 2], dtype=np.int64)  # Axes to slice along
+    steps = np.array([1, 1, 1], dtype=np.int64)  # Step along each axis
+
+    slice_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Slice',
+                inputs=['data', 'starts', 'ends', 'axes', 'steps'],
+                outputs=['sliced'],
+            ),
+        ],
+        name='SliceGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [3, 4, 5]),
+            helper.make_tensor_value_info('starts', TensorProto.INT64, [3]),
+            helper.make_tensor_value_info('ends', TensorProto.INT64, [3]),
+            helper.make_tensor_value_info('axes', TensorProto.INT64, [3]),
+            helper.make_tensor_value_info('steps', TensorProto.INT64, [3]),
+        ],
+        outputs=[helper.make_tensor_value_info('sliced', TensorProto.FLOAT, [3, 2, 5])],  # Example output shape after slicing
+    )
+    initializers = [
+        numpy_helper.from_array(starts, name='starts'),
+        numpy_helper.from_array(ends, name='ends'),
+        numpy_helper.from_array(axes, name='axes'),
+        numpy_helper.from_array(steps, name='steps'),
+    ]
+    slice_model = helper.make_model(slice_graph, producer_name='onnx-examples', initializers=initializers)
+    save_model(slice_model, output_dir, "slice.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -213,5 +270,9 @@ def generate_test_models(operation, output_dir):
         generate_squeeze_model(output_dir)
     elif operation.lower() == 'reshape':
         generate_reshape_model(output_dir)
+    elif operation.lower() == 'softmax':
+        generate_softmax_model(output_dir)
+    elif operation.lower() == 'slice':
+        generate_slice_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
