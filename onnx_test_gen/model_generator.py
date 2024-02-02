@@ -250,6 +250,33 @@ def generate_slice_model(output_dir):
     slice_model = helper.make_model(slice_graph, producer_name='onnx-examples', initializers=initializers)
     save_model(slice_model, output_dir, "slice.onnx")
 
+def generate_gather_model(output_dir):
+    data = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)  # Example 2D tensor
+    indices = np.array([0, 1], dtype=np.int64)  # Indices to gather
+    axis = 0  # Axis along which to gather
+
+    gather_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Gather',
+                inputs=['data', 'indices'],
+                outputs=['gathered'],
+                axis=axis,
+            ),
+        ],
+        name='GatherGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [2, 3]),
+            helper.make_tensor_value_info('indices', TensorProto.INT64, [2]),
+        ],
+        outputs=[helper.make_tensor_value_info('gathered', TensorProto.FLOAT, [2, 3])],  # Output shape depends on the indices and axis
+    )
+    initializers = [
+        numpy_helper.from_array(indices, name='indices'),
+    ]
+    gather_model = helper.make_model(gather_graph, producer_name='onnx-examples', initializers=initializers)
+    save_model(gather_model, output_dir, "gather.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -274,5 +301,7 @@ def generate_test_models(operation, output_dir):
         generate_softmax_model(output_dir)
     elif operation.lower() == 'slice':
         generate_slice_model(output_dir)
+    elif operation.lower() == 'gather':
+        generate_gather_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
