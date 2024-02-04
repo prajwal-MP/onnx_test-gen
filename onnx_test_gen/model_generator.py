@@ -277,6 +277,28 @@ def generate_gather_model(output_dir):
     gather_model = helper.make_model(gather_graph, producer_name='onnx-examples', initializers=initializers)
     save_model(gather_model, output_dir, "gather.onnx")
 
+def generate_mul_model(output_dir):
+    data_a = np.random.randn(3, 4).astype(np.float32)
+    data_b = np.random.randn(3, 4).astype(np.float32)
+
+    mul_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Mul',
+                inputs=['data_a', 'data_b'],
+                outputs=['product'],
+            ),
+        ],
+        name='MulGraph',
+        inputs=[
+            helper.make_tensor_value_info('data_a', TensorProto.FLOAT, [3, 4]),
+            helper.make_tensor_value_info('data_b', TensorProto.FLOAT, [3, 4]),
+        ],
+        outputs=[helper.make_tensor_value_info('product', TensorProto.FLOAT, [3, 4])],
+    )
+    mul_model = helper.make_model(mul_graph, producer_name='onnx-examples')
+    save_model(mul_model, output_dir, "mul.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -303,5 +325,7 @@ def generate_test_models(operation, output_dir):
         generate_slice_model(output_dir)
     elif operation.lower() == 'gather':
         generate_gather_model(output_dir)
+    elif operation.lower() == 'mul':
+        generate_mul_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
