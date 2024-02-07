@@ -299,6 +299,28 @@ def generate_mul_model(output_dir):
     mul_model = helper.make_model(mul_graph, producer_name='onnx-examples')
     save_model(mul_model, output_dir, "mul.onnx")
 
+def generate_div_model(output_dir):
+    data_a = np.random.randn(3, 4).astype(np.float32) + 1  # Avoid dividing by zero
+    data_b = np.random.randn(3, 4).astype(np.float32) + 1
+
+    div_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Div',
+                inputs=['data_a', 'data_b'],
+                outputs=['quotient'],
+            ),
+        ],
+        name='DivGraph',
+        inputs=[
+            helper.make_tensor_value_info('data_a', TensorProto.FLOAT, [3, 4]),
+            helper.make_tensor_value_info('data_b', TensorProto.FLOAT, [3, 4]),
+        ],
+        outputs=[helper.make_tensor_value_info('quotient', TensorProto.FLOAT, [3, 4])],
+    )
+    div_model = helper.make_model(div_graph, producer_name='onnx-examples')
+    save_model(div_model, output_dir, "div.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -327,5 +349,7 @@ def generate_test_models(operation, output_dir):
         generate_gather_model(output_dir)
     elif operation.lower() == 'mul':
         generate_mul_model(output_dir)
+    elif operation.lower() == 'div':
+        generate_div_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
