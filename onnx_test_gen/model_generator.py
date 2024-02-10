@@ -321,6 +321,28 @@ def generate_div_model(output_dir):
     div_model = helper.make_model(div_graph, producer_name='onnx-examples')
     save_model(div_model, output_dir, "div.onnx")
 
+def generate_reduce_mean_model(output_dir):
+    data = np.random.randn(2, 3, 4).astype(np.float32)
+
+    reduce_mean_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'ReduceMean',
+                inputs=['data'],
+                outputs=['reduced'],
+                axes=[1],  # Reduce along the second axis
+                keepdims=0,
+            ),
+        ],
+        name='ReduceMeanGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [2, 3, 4]),
+        ],
+        outputs=[helper.make_tensor_value_info('reduced', TensorProto.FLOAT, [2, 4])],  # Output shape after reduction
+    )
+    reduce_mean_model = helper.make_model(reduce_mean_graph, producer_name='onnx-examples')
+    save_model(reduce_mean_model, output_dir, "reduce_mean.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -351,5 +373,7 @@ def generate_test_models(operation, output_dir):
         generate_mul_model(output_dir)
     elif operation.lower() == 'div':
         generate_div_model(output_dir)
+    elif operation.lower() == 'reducemean':
+        generate_reducemean_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
