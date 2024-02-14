@@ -343,6 +343,41 @@ def generate_reduce_mean_model(output_dir):
     reduce_mean_model = helper.make_model(reduce_mean_graph, producer_name='onnx-examples')
     save_model(reduce_mean_model, output_dir, "reduce_mean.onnx")
 
+def generate_batch_normalization_model(output_dir):
+    data = np.random.randn(1, 2, 3, 4).astype(np.float32)  # Example input
+    scale = np.random.rand(2).astype(np.float32)
+    B = np.random.rand(2).astype(np.float32)
+    mean = np.random.randn(2).astype(np.float32)
+    var = np.random.rand(2).astype(np.float32)  # Variance must be positive
+
+    batch_norm_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'BatchNormalization',
+                inputs=['data', 'scale', 'B', 'mean', 'var'],
+                outputs=['normalized'],
+                epsilon=1e-5,  # Example epsilon
+            ),
+        ],
+        name='BatchNormalizationGraph',
+        inputs=[
+            helper.make_tensor_value_info('data', TensorProto.FLOAT, [1, 2, 3, 4]),
+            helper.make_tensor_value_info('scale', TensorProto.FLOAT, [2]),
+            helper.make_tensor_value_info('B', TensorProto.FLOAT, [2]),
+            helper.make_tensor_value_info('mean', TensorProto.FLOAT, [2]),
+            helper.make_tensor_value_info('var', TensorProto.FLOAT, [2]),
+        ],
+        outputs=[helper.make_tensor_value_info('normalized', TensorProto.FLOAT, [1, 2, 3, 4])],
+    )
+    initializers = [
+        numpy_helper.from_array(scale, name='scale'),
+        numpy_helper.from_array(B, name='B'),
+        numpy_helper.from_array(mean, name='mean'),
+        numpy_helper.from_array(var, name='var'),
+    ]
+    batch_norm_model = helper.make_model(batch_norm_graph, producer_name='onnx-examples', initializers=initializers)
+    save_model(batch_norm_model, output_dir, "batch_normalization.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -373,7 +408,9 @@ def generate_test_models(operation, output_dir):
         generate_mul_model(output_dir)
     elif operation.lower() == 'div':
         generate_div_model(output_dir)
-    elif operation.lower() == 'reducemean':
-        generate_reducemean_model(output_dir)
+    elif operation.lower() == 'reduce_mean':
+        generate_reduce_mean_model(output_dir)
+    elif operation.lower() == 'batch_normalization':
+        generate_batch_normalization_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
