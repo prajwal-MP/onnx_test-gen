@@ -378,6 +378,28 @@ def generate_batch_normalization_model(output_dir):
     batch_norm_model = helper.make_model(batch_norm_graph, producer_name='onnx-examples', initializers=initializers)
     save_model(batch_norm_model, output_dir, "batch_normalization.onnx")
 
+def generate_max_model(output_dir):
+    data_a = np.random.randn(3, 4).astype(np.float32)
+    data_b = np.random.randn(3, 4).astype(np.float32)
+
+    max_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Max',
+                inputs=['data_a', 'data_b'],
+                outputs=['maxed'],
+            ),
+        ],
+        name='MaxGraph',
+        inputs=[
+            helper.make_tensor_value_info('data_a', TensorProto.FLOAT, [3, 4]),
+            helper.make_tensor_value_info('data_b', TensorProto.FLOAT, [3, 4]),
+        ],
+        outputs=[helper.make_tensor_value_info('maxed', TensorProto.FLOAT, [3, 4])],
+    )
+    max_model = helper.make_model(max_graph, producer_name='onnx-examples')
+    save_model(max_model, output_dir, "max.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -412,5 +434,7 @@ def generate_test_models(operation, output_dir):
         generate_reduce_mean_model(output_dir)
     elif operation.lower() == 'batch_normalization':
         generate_batch_normalization_model(output_dir)
+    elif operation.lower() == 'max':
+        generate_max_normalization_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
