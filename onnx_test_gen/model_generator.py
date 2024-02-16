@@ -400,6 +400,28 @@ def generate_max_model(output_dir):
     max_model = helper.make_model(max_graph, producer_name='onnx-examples')
     save_model(max_model, output_dir, "max.onnx")
 
+def generate_min_model(output_dir):
+    data_a = np.random.randn(3, 4).astype(np.float32)
+    data_b = np.random.randn(3, 4).astype(np.float32)
+
+    min_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'Min',
+                inputs=['data_a', 'data_b'],
+                outputs=['minned'],
+            ),
+        ],
+        name='MinGraph',
+        inputs=[
+            helper.make_tensor_value_info('data_a', TensorProto.FLOAT, [3, 4]),
+            helper.make_tensor_value_info('data_b', TensorProto.FLOAT, [3, 4]),
+        ],
+        outputs=[helper.make_tensor_value_info('minned', TensorProto.FLOAT, [3, 4])],
+    )
+    min_model = helper.make_model(min_graph, producer_name='onnx-examples')
+    save_model(min_model, output_dir, "min.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -436,5 +458,7 @@ def generate_test_models(operation, output_dir):
         generate_batch_normalization_model(output_dir)
     elif operation.lower() == 'max':
         generate_max_normalization_model(output_dir)
+    elif operation.lower() == 'min':
+        generate_min_normalization_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
