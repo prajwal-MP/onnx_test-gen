@@ -422,6 +422,26 @@ def generate_min_model(output_dir):
     min_model = helper.make_model(min_graph, producer_name='onnx-examples')
     save_model(min_model, output_dir, "min.onnx")
 
+def generate_average_pool_model(output_dir):
+    data = np.random.randn(1, 3, 32, 32).astype(np.float32)  # Example input: 1 sample, 3 channels, 32x32
+
+    average_pool_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'AveragePool',
+                inputs=['data'],
+                outputs=['pooled'],
+                kernel_shape=[2, 2],
+                strides=[2, 2]
+            ),
+        ],
+        name='AveragePoolGraph',
+        inputs=[helper.make_tensor_value_info('data', TensorProto.FLOAT, [1, 3, 32, 32])],
+        outputs=[helper.make_tensor_value_info('pooled', TensorProto.FLOAT, [1, 3, 16, 16])],  # Output shape after pooling
+    )
+    average_pool_model = helper.make_model(average_pool_graph, producer_name='onnx-examples')
+    save_model(average_pool_model, output_dir, "average_pool.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -460,5 +480,7 @@ def generate_test_models(operation, output_dir):
         generate_max_normalization_model(output_dir)
     elif operation.lower() == 'min':
         generate_min_normalization_model(output_dir)
+    elif operation.lower() == 'average_pool':
+        generate_average_pool_normalization_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
