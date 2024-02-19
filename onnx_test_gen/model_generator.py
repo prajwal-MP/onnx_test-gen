@@ -442,6 +442,24 @@ def generate_average_pool_model(output_dir):
     average_pool_model = helper.make_model(average_pool_graph, producer_name='onnx-examples')
     save_model(average_pool_model, output_dir, "average_pool.onnx")
 
+def generate_global_average_pool_model(output_dir):
+    data = np.random.randn(1, 3, 32, 32).astype(np.float32)  # Example input: 1 sample, 3 channels, 32x32
+
+    global_average_pool_graph = helper.make_graph(
+        nodes=[
+            helper.make_node(
+                'GlobalAveragePool',
+                inputs=['data'],
+                outputs=['global_pooled'],
+            ),
+        ],
+        name='GlobalAveragePoolGraph',
+        inputs=[helper.make_tensor_value_info('data', TensorProto.FLOAT, [1, 3, 32, 32])],
+        outputs=[helper.make_tensor_value_info('global_pooled', TensorProto.FLOAT, [1, 3, 1, 1])],  # Output shape after pooling
+    )
+    global_average_pool_model = helper.make_model(global_average_pool_graph, producer_name='onnx-examples')
+    save_model(global_average_pool_model, output_dir, "global_average_pool.onnx")
+
 def ensure_dir_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -482,5 +500,7 @@ def generate_test_models(operation, output_dir):
         generate_min_normalization_model(output_dir)
     elif operation.lower() == 'average_pool':
         generate_average_pool_normalization_model(output_dir)
+    elif operation.lower() == 'global_average_pool':
+        generate_global_average_pool_normalization_model(output_dir)
     else:
         print(f"Operation '{operation}' not supported yet.")
